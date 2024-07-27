@@ -1,0 +1,194 @@
+---
+title: "Proyek EAS"
+author: "Shabrina Nur Ihsani"
+date: "2023-12-16"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Big Idea
+
+Berdasarkan data jumlah tumpukan sampah yang ada di Indonesia, analitika diagnostik digunakan untuk mengetahui variabel apa saja yang mempengaruhi banyaknya tumpukan sampah, bagaimana pola tiap variabel tersebut, serta apakah faktor kondisi wilayah dan demografi menjadi salah satu variabel yang berpengaruh terhadap banyaknya tumpukan sampah di Indonesia.
+
+## Data Preparation
+
+```{r}
+library(dplyr)
+library(readxl)
+```
+
+Data yang digunakan diperoleh dari Sistem Informasi Pengolahan Sampah Nasional (SIPSN) dan Badan Pusat Statistik Indonesia (BPS). Variabel/atribut yang terdapat dalam data, yaitu Kabupaten/Kota, timbunan sampah, sampah terkelola, daur ulang sampah, luas wilayah, luas RTH (Ruang Terbuka Hijau), persen RTH, dan kepadatan penduduk. Berikut tampilan 5 baris awal data tersebut.
+
+```{r}
+data<-read_excel("C:/Users/Lenovo/Documents/Rina's work/01. KULIAH/kuliah-add/Project EAS/DataSampahIndo2023.xlsx")
+```
+
+```{r}
+head(data)
+dim(data)
+summary(data)
+```
+
+Dalam data tersebut ada beberapa nilai yang NA atau null. Dalam kasus ini, nilai yang null tidak diganti dengan nilai apapun. Karena tidak ada informasi dari variabel lainnya yang bisa digunakan untuk memprediksi nilai dari variabel yang null. Nilai tersebut juga tidak bisa digantikan dengan rata-rata dari keseluruhan data di variabel yang sama. Karena dalam kasus ini, perlakuan tersebut dapat mempengaruhi distribusi data serta pola dan relasi yang terbentuk antarvariabel. Misalnya, data Luas RTH yang memiliki 47 nilai null. Tidak ada variabel lain yang dapat digunakan untuk memprediksi nilai null dalam variabel Luas RTH dan apabila nilai null tersebut diganti dengan rata-rata dari keseluruhan data, maka bisa mempengaruhi distribusi data. Oleh karena itu, nilai null dalam kasus ini diabaikan.
+
+## Outlier
+
+### Timbunan Sampah dan Sampah Terkelola
+
+```{r}
+columns_to_plot <- c("TimbunanSampah", "SampahTerkelola")
+boxplot(data[, columns_to_plot],
+        main = "Boxplot Timbunan Sampah dan Sampah Terkelola")
+```
+
+Ada cukup banyak outlier pada variabel timbunan sampah dan sampah terkelola. Namun, outlier tersebut bukan bagian dari anomali data. Karena jumlahnya tidak hanya 1 atau 2 data. Jumlah timbunan sampah dan sampah terkelola bisa saja berbeda untuk setiap kabupaten/kota. Oleh karena itu, menghapus outlier dalam kasus ini bukan sebuah keputusan yang tepat. Setelah diamati, outlier yang cukup jauh dimiliki oleh wilayah Jakarta dan sekitarnya. Hal ini juga sudah didukung beberapa fakta di lapangan bahwa wilayah-wilayah ini memiliki jumlah timbunan sampah terbanyak. Maka dari itu, kehadiran outlier ini juga dapat membantu pembuat keputusan/stakeholder untuk mengetahui bahwa terdapat jumlah timbunan sampah yang cukup jauh dari jumlah timbunan sampah di wilayah lainnya.
+
+### Daur Ulang Sampah
+
+```{r}
+columns_to_plot <- c("DaurUlangSampah")
+boxplot(data[, columns_to_plot],
+        main = "Boxplot Daur Ulang Sampah")
+```
+
+Sama seperti variabel timbunan sampah dan sampah terkelola, outlier dalam variabel daur ulang sampah tidak dapat dihapus. Karena outlier tersebut bisa saja menyampaikan informasi bahwa jumlah sampah yang didaur ulang di suatu wilayah tertentu memang jumlahnya sangat jauh dibanding wilayah lainnya, yang biasanya dipengaruhi oleh jumlah tumpukan sampah itu sendiri serta kebijakan maupun fasilitas yang ada untuk pengolahan sampah.
+
+### Luas Wilayah dan Kepadatan Penduduk
+
+Terdapat 2 data yang nilainya cukup jauh dari data lainnya. Dalam kasus ini, luas wilayah yang memiliki nilai berbeda memanglah wajar. Akan tetapi, luas wilayah dalam data ini adalah luas wilayah tiap kabupaten/kota. Setelah diamati, ternyata memang kedua data tersebut merupakan kesalahan input. Karena dari sumber lain, yaitu BPS wilayah terkait, tertera bahwa luas wilayah tersebut tidak sama dengan data yang diinputkan saat ini. Maka, setelah dilakukan perbaikan pada data, berikut adalah boxplot untuk luas wilayah.
+
+```{r}
+columns_to_plot <- c("LuasWilayah")
+boxplot(data[, columns_to_plot],
+        main = "Boxplot Luas Wilayah")
+```
+
+```{r}
+columns_to_plot <- c("KepadatanPenduduk")
+boxplot(data[, columns_to_plot],
+        main = "Boxplot Kepadatan Penduduk")
+```
+
+Pada variabel kepadatan penduduk juga ditemui banyak outlier. Setelah diamati, outlier tersebut bukanlah merupakan anomali data. Karena wilayah yang memiliki kepadatan penduduk dengan nilai demikian merupakan wilayah Jakarta dan sekitarnya. Hal ini sudah berdasarkan fakta yang ada di lapangan. Melalui boxplot ini, dapat diperoleh informasi bahwa persebaran penduduk di Indonesia masih belum merata.
+
+### Luas RTH dan Persen RTH
+
+```{r}
+columns_to_plot <- c("LuasRTH")
+boxplot(data[, columns_to_plot],
+        main = "Boxplot Luas Ruang Terbuka Hijau (RTH)")
+```
+
+Outlier pada variabel ini bukan merupakan anomali. Karena nilai outlier yang tidak terlalu jauh dengan whisker serta jumlah data outlier yang tidak hanya 1 atau 2 data. Dalam kasus luas Ruang Terbuka Hijau, nilainya bisa saja berbeda antara satu wilayah dengan lainnya. Oleh karena itu, outlier disini tidak menunjukkan adanya keanehan dari data.
+
+```{r}
+columns_to_plot <- c("PersenRTH")
+boxplot(data[, columns_to_plot],
+        main = "Boxplot Persen Ruang Terbuka Hijau (RTH)")
+```
+
+Karena outlier pada luas RTH tidak menunjukkan adanya anomali pada data, maka outlier pada persen RTH juga tidak menunjukkan anomali. Boxplot persen RTH ini menunjukkan bahwa jumlah Ruang Terbuka Hijau di sebagian besar wilayah masih sangat kecil dibandingkan dengan luas wilayahnya. Hal ini juga dapat membantu para stakeholder dalam pengambilan keputusan.
+
+## Relationship
+
+Dalam analisis relationship, setiap variabel akan dicari korelasinya dengan variabel yang lain. Apabila korelasi mendekati 1 atau -1, maka semakin baik relationship dari kedua variabel tersebut. Sebaliknya, apabila mendekati angka 0, maka semakin lemah. Artinya tidak ada hubungan atas perubahan nilai dari kedua variabel tersebut. Dalam data sampah nasional ini, terdapat beberapa data yang memiliki nilai null. Nilai null dapat mempengaruhi angka korelasi antarvariabel. Karena Jika ada variabel/kolom yang seluruhnya kosong atau memiliki nilai null di setiap baris, itu akan menyebabkan hasil korelasi menjadi null karena tidak ada variasi data di kolom tersebut. Maka dari itu, perlu modifikasi kode pada bahasa pemrograman R (bahasa pemrograman yang digunakan dalam analisis ini) agar nilai yang null dapat diabaikan dan tidak mengganggu analisis korelasi dari nilai lainnya.
+
+```{r}
+library(corrplot)
+```
+
+```{r}
+num.cols <- sapply(data, is.numeric)
+cor.data <- cor(data[,num.cols], use = "complete.obs") 
+cor.data
+corrplot(cor.data,method='color')
+```
+
+Dari gambar tersebut dapat diperoleh variabel-variabel yang memiliki angka korelasi cukup baik dan sesuai dengan big idea yang ingin dibahas, diantaranya yaitu variabel timbunan sampah dengan sampah terkelola (0.94631412), variabel timbunan sampah dengan daur ulang sampah (0.90032745), variabel timbunan sampah dengan kepadatan penduduk (0.74548760)
+
+## Pattern
+
+Dari analisis relationship, maka dapat dilakukan analisis pattern atau pola untuk mengetahui pola yang terjadi di tiap perubahan nilai tiap variabel yang berhubungan. Berikut akan ditampilkan variabel-variabel yang memiliki angka korelasi cukup tinggi serta variabel-variabel yang diasumsikan memiliki hubungan satu sama lain sesuai dengan big idea di awal.
+
+```{r}
+m1 <- lm(TimbunanSampah ~ SampahTerkelola, data = data)
+summary(m1)
+
+plot(data$TimbunanSampah ~ data$SampahTerkelola,
+     main = "Timbunan Sampah ~ Sampah Terkelola",
+     xlab = "Timbunan Sampah",
+     ylab = "Sampah Terkelola")
+abline(m1)
+```
+
+Salah satu nilai yang dapat diamati dalam summary suatu plot adalah multiple R-squared. Nilai ini menunjukkan seberapa baik variabel independen menjelaskan variabilitas dalam variabel dependen dalam model regresi. Jika angkanya mendekati 1, maka variabel independen semakin baik dalam menjelaskan variabilitas dalam variabel dependen dalam model regresi. Dari plot antara variabel timbunan sampah dengan sampah terkelola, multiple R-squared-nya cukup bagus, yaitu 0.8817. Dalam analisis relationship, korelasinya juga mencapai angka 0.94631412. Hal ini berarti semakin banyak timbunan sampah, semakin banyak pula sampah yang terkelola. Dalam kasus ini, hal tersebut merupakan informasi baik. Yang mana berarti jumlah sampah yang terkelola sudah mengikuti jumlah sampah yang tertimbun secara positif.
+
+```{r}
+m1 <- lm(TimbunanSampah ~ DaurUlangSampah, data = data)
+summary(m1)
+
+plot(data$TimbunanSampah ~ data$DaurUlangSampah,
+     main = "Timbunan Sampah ~ Daur Ulang Sampah",
+     xlab = "Timbunan Sampah",
+     ylab = "Daur Ulang Sampah")
+abline(m1)
+```
+
+Begitu pula dengan pola antara variabel timbunan sampah dan daur ulang sampah, nilai multiple R-squared-nya mencapai 0.7088 yang juga dapat dibilang cukup bagus. Dalam analisis relationship, korelasinya juga mencapai angka 0.90032745. Hal ini berarti, semakin banyak timbunan sampah, semakin banyak pula jumlah sampah yang didaur ulang. Dalam kasus ini, hal tersebut juga merupakan informasi baik. Karena jumlah sampah yang didaur ulang sudah mengikuti jumlah tumpukan sampah secara positif.
+
+```{r}
+m1 <- lm(LuasWilayah ~ TimbunanSampah, data = data)
+summary(m1)
+
+plot(data$LuasWilayah ~ data$TimbunanSampah,
+     main = "Luas Wilayah ~ Timbunan Sampah",
+     xlab = "Luas Wilayah",
+     ylab = "Timbunan Sampah")
+abline(m1)
+```
+
+Asumsi pola yang terbentuk antara variabel luas wilayah dan timbunan sampah adalah bahwa semakin luas suatu wilayah, maka jumlah tumpukan sampahnya juga semakin banyak. Namun, ternyata tidak demikian. Luas suatu wilayah tidak mempengaruhi jumlah tumpukan sampah. Hal ini dapat dilihat dari multiple R-squared yang hanya 0.03572 dan angka korelasinya yang hanya -0.1912564.
+
+```{r}
+m1 <- lm(KepadatanPenduduk ~ TimbunanSampah, data = data)
+summary(m1)
+
+plot(data$KepadatanPenduduk ~ data$TimbunanSampah,
+     main = "Kepadatan Penduduk ~ Timbunan Sampah",
+     xlab = "Kepadatan Penduduk",
+     ylab = "Timbunan Sampah")
+abline(m1)
+```
+
+Selain itu, asumsi untuk pola yang terbentuk antara variabel kepadatan penduduk dan timbunan sampah juga sama dengan asumsi pola pada variabel luas wilayah dan timbunan sampah. Semakin padat penduduk di suatu wilayah, maka semakin besar jumlah timbunan sampah di wilayah tersebut. Asumsi ini ternyata benar. Nilai multiple R-squared kedua variabel ini mencapai 0.5422 dan korelasinya ada di angka 0.74548760. Tidak terlalu tinggi memang, tapi tergolong cukup bagus dalam suatu korelasi, karena lebih dari 0.7. Terakhir, ada variabel persen RTH yang diperoleh dari luas RTH di suatu wilayah per luas wilayah tersebut. Asumsinya, semakin besar persen Ruang Terbuka Hijau di suatu wilayah (Biasanya mendukung penyediaan tempat pengolahan sampah, pembuatan kompos, praktik pengolahan sampah berkelanjutan, dan lain sebagainya), maka semakin besar jumlah sampah yang terkelola.
+
+```{r}
+m1 <- lm(LuasRTH ~ SampahTerkelola, data = data)
+summary(m1)
+
+plot(data$LuasRTH ~ data$SampahTerkelola,
+     main = "Luas RTH ~ Sampah Terkelola",
+     xlab = "Luas RTH",
+     ylab = "Sampah Terkelola")
+abline(m1)
+```
+
+```{r}
+m1 <- lm(PersenRTH ~ SampahTerkelola, data = data)
+summary(m1)
+
+plot(data$PersenRTH ~ data$SampahTerkelola,
+     main = "Persen RTH ~ Sampah Terkelola",
+     xlab = "Persen RTH",
+     ylab = "Sampah Terkelola")
+abline(m1)
+```
+
+Namun, ternyata tidak ada pola yang terbentuk antara kedua variabel tersebut. Nilai multiple R-squared-nya sangat rendah sampai 6.839e-05 dan angka korelasinya hanya -0.01666801. Artinya, Luas RTH di suatu wilayah tidak mempengaruhi jumlah sampah yang terkelola di wilayah tersebut. Ada faktor-faktor lainnya, seperti kebijakan pemerintah, pola hidup masyarakat, dan teknik pengolahan sampah yang berbeda tiap wilayah yang bisa akan mempengaruhi jumlah sampah yang terkelola di wilayah tersebut.
+
+## Kesimpulan
+
+Dari analisis yang dilakukan, kondisi suatu wilayah seperti luas wilayah tidak mempengaruhi jumlah tumpukan sampah di wilayah tersebut. Akan tetapi, kondisi demografi seperti kepadatan penduduk menjadi salah satu variabel yang mempengaruhi jumlah tumpukan sampah di suatu wilayah. Semakin padat suatu wilayah, semakin banyak jumlah tumpukan sampahnya.
